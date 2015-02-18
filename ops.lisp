@@ -20,7 +20,9 @@
   (:method (op left right)
     (error
      "Op ~a is not implemented. You may have not used DEFINE-OP."
-     op)))
+     op))
+  (:method :around (op left right)
+           (expand-ops (call-next-method))))
 
 (defmacro define-op (name (left right) &body body)
   "Define a method on EXPAND-OP for an op named NAME, and register it in *OPS*."
