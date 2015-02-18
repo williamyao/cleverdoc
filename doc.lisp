@@ -57,28 +57,39 @@
                  (append1 (result-base) msg))))
 
 (define-op ==> (left right)
-  `(if (equal (,*fn* ,@left) ,(car right))
-       (pass)
-       (fail ,(format nil "(~a~{ ~a~}) =/= ~a"
-                      *fn* left (car right)))))
+  `((,*fn* ,@left) === ,@right))
 
 (define-op /=> (left right)
-  `(if (equal (,*fn* ,@left) ,(car right))
-       (fail ,(format nil "(~a~{ ~a~}) == ~a"
-                      *fn* left (car right)))
-       (pass)))
+  `((,*fn* ,@left) =/= ,@right))
 
-(define-op =>> (left right)
-  (with-gensyms (out)
-    `(let ((,out (make-in-memory-output-stream
-                  :element-type ,(typecase (car right)
-                                   (string 'character)
-                                   (t 'octet)))))
-       (,*fn* ,@left)
-       (if (equal (get-output-stream-sequence ,out) ,(car right))
-           (pass)
-           (fail ,(format nil "(~a~{ ~a~}) did not write out ~s"
-                          *fn* left (car right)))))))
+;; (define-op =>> (left right)
+;;   (with-gensyms (out)
+;;     `(let ((,out (make-in-memory-output-stream
+;;                   :element-type ,(typecase (car right)
+;;                                    (string 'character)
+;;                                    (t 'octet)))))
+;;        (,*fn* ,@left)
+;;        ((get-output-stream-sequence ,out) === ,@right))))
+
+(define-op === (left right)
+  (unless (= (length left) 1)
+    (error "Left-side argument to === should be a single form"))
+  `(if (equal (subseq (multiple-value-list ,@left)
+                      0 ,(length right))
+              (list ,@right))
+       (pass)
+       (fail ,(format nil "~{ ~a~} =/=~{ ~a~}"
+                      left right))))
+
+(define-op =/= (left right)
+  (unless (= (length left) 1)
+    (error "Left-side argument to =/= should be a single form"))
+  `(if (not (equal (subseq (multiple-value-list ,@left)
+                           0 ,(length right))
+                   (list ,@right)))
+       (pass)
+       (fail ,(format nil "~{ ~a~} ===~{ ~a~}"
+                      left right))))
 
 (defmacro document (fn &body body)
   (let ((*fn* fn))
