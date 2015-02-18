@@ -13,10 +13,19 @@
   (setf (gethash name *tests*) clo)
   name)
 
-(defun test (&rest names)
+(defun in-test-level (sym level)
+  (cond ((eql level :package)
+         (string= (package-name *package*)
+                  (package-name (symbol-package sym))))
+        ((eql level :full)
+         t)
+        (t (eql sym level))))
+
+(defun test (&key (level :package))
   (let (*passes* *failures*)
-    (loop for name in names
-       do (funcall (gethash name *tests*)))
+    (loop for sym being the hash-keys of *tests*
+       when (in-test-level sym level)
+       do (funcall (gethash sym *tests*)))
     (display-results)))
 
 (defun display-results ()
