@@ -9,6 +9,9 @@
            #:==x
 
            #:=== #:=/=
-           #:=x=))
+           #:=x=
+
+           #:==>>  #:>>>
+           #:{in}  #:{out}))
 (pushnew :cleverdoc *features*)
 

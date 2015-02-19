@@ -9,6 +9,9 @@
 (defparameter *passes* nil)
 (defparameter *failures* nil)
 
+(defvar {in} nil "Input stream used in testing input functions.")
+(defvar {out} nil "Output stream used in testing output functions.")
+
 (defun register-test (name clo)
   (setf (gethash name *tests*) clo)
   name)
