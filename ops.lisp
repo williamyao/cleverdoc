@@ -35,8 +35,8 @@
 
 (defun find-op (form)
   (typecase form
-    (cons (loop for op in *ops* if (position op form)
-             do (return op)))
+    (cons (loop for sexp in form if (find sexp *ops*)
+               do (return sexp)))
     (t nil)))
 
 (defun expand-ops (form)
