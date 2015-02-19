@@ -15,25 +15,30 @@ Let's have something a little more palatable for this pattern of writing unit te
 Basics
 ------
 
-The most important macro is `(DOCUMENT)`. Let's look at testing `(+)` as an example.
+The most important macro is `DOCUMENT`. Let's look at testing `+` as an example.
 
     (document +
       (2 2 ==> 4)
       (6 5 ==> 11)
       (1 1 ==> 3))
 
-Once this is defined, now we can run it using `(TEST)`.
+Once this is defined, now we can run it using `TEST`.
 
     (test)
 
     ==>
-
+    
     Specification for COMMON-LISP::+ FAILED:
         (+ 1 1) =/= 3
+
+    =============
+       RESULTS
+    =============
+
     Performed 3 checks.
         FAIL: 1 (33%)
         Pass: 2 (67%)
-    NIL
+    NIl
 
 As an added bonus, if the first form in the `DOCUMENT` body is a string, it will be set as the function documentation.
 
