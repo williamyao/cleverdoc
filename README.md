@@ -33,7 +33,11 @@ Once this is defined, now we can run it using `(TEST)`.
     Performed 3 checks.
         FAIL: 1 (33%)
         Pass: 2 (67%)
+<<<<<<< HEAD
     NIL
+=======
+    *NIL*
+>>>>>>> 1820b180c42d86ae1ad20382121871927a0088aa
 
 As an added bonus, if the first form in the `DOCUMENT` body is a string, it will be set as the function documentation.
 
