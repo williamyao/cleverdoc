@@ -29,8 +29,12 @@
     (display-results)))
 
 (defun display-results ()
-  (display-failures)
-  (display-summary))
+  (cond
+    ((or *passes* *failures*)
+     (display-failures)
+     (display-summary))
+    (t
+     (format t "No matching tests found."))))
 
 (defun display-failures ()
   (loop for failure in *failures*
@@ -40,9 +44,10 @@
   (let* ((numpass (length *passes*))
          (numfail (length *failures*))
          (total (+ numpass numfail)))
-    (format t "~&Performed ~d checks." total)
-    (format t "~&~4tFAIL: ~d (~d%)" numfail (% numfail total))
-    (format t "~&~4tPass: ~d (~d%)" numpass (% numpass total))))
+    (format t "~&~%=============~%   RESULTS~%=============~%")
+    (format t "~%Performed ~d check~:p." total)
+    (format t "~%~4tFAIL: ~d (~d%)" numfail (% numfail total))
+    (format t "~%~4tPass: ~d (~d%)" numpass (% numpass total))))
 
 (defun % (n1 n2)
   (round (* 100 (/ n1 n2 1.0))))
@@ -64,41 +69,6 @@
   (setf *failures*
         (append1 *failures*
                  (append1 (result-base) msg))))
-
-(define-op ==> (left right)
-  `((,*fn* ,@left) === ,@right))
-
-(define-op /=> (left right)
-  `((,*fn* ,@left) =/= ,@right))
-
-;; (define-op =>> (left right)
-;;   (with-gensyms (out)
-;;     `(let ((,out (make-in-memory-output-stream
-;;                   :element-type ,(typecase (car right)
-;;                                    (string 'character)
-;;                                    (t 'octet)))))
-;;        (,*fn* ,@left)
-;;        ((get-output-stream-sequence ,out) === ,@right))))
-
-(define-op === (left right)
-  (unless (= (length left) 1)
-    (error "Left-side argument to === should be a single form"))
-  `(if (equal (subseq (multiple-value-list ,@left)
-                      0 ,(length right))
-              (list ,@right))
-       (pass)
-       (fail ,(format nil "~{ ~a~} =/=~{ ~a~}"
-                      left right))))
-
-(define-op =/= (left right)
-  (unless (= (length left) 1)
-    (error "Left-side argument to =/= should be a single form"))
-  `(if (not (equal (subseq (multiple-value-list ,@left)
-                           0 ,(length right))
-                   (list ,@right)))
-       (pass)
-       (fail ,(format nil "~{ ~a~} ===~{ ~a~}"
-                      left right))))
 
 (defmacro document (fn &body body)
   (let ((*fn* fn))

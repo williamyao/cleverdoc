@@ -5,7 +5,10 @@
         #:flexi-streams)
   (:export #:document #:test
            
-           #:==> #:/=>
-           #:=== #:=/=))
+           #:==> #:==/
+           #:==x
+
+           #:=== #:=/=
+           #:=x=))
 (pushnew :cleverdoc *features*)
 
