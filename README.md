@@ -84,14 +84,17 @@ Many of the CLeverdoc operators are aware of multiple return values.
 CLeverdoc supports basic equality operators. However, this should usually be eschewed in favor of using the operators with implied function calls. They may be useful in some situations, though.
 
 + `===` tests equality, using `EQUAL`.
+
   ```lisp
   ((list) === nil)
   ```
 + `=/=` tests inequality, using `EQUAL`.
+
   ```lisp
   (2 =/= 3)
   ```
 + `=x=` tests that evaluating the left-side form results in any of the errors specified on the right.
+
   ```lisp
   ((+ 2 #\c) =x= simple-type-error end-of-file)
   ```
