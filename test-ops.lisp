@@ -4,10 +4,10 @@
 (in-package #:cleverdoc)
 
 (define-op ==> (left right)
-  `((,*fn* ,@left) === ,@right))
+  `((,@*fn* ,@left) === ,@right))
 
 (define-op ==/ (left right)
-  `((,*fn* ,@left) =/= ,@right))
+  `((,@*fn* ,@left) =/= ,@right))
 
 (define-op === (left right)
   (unless (= (length left) 1)
@@ -38,7 +38,7 @@
                      e ',@left ',right)))))
 
 (define-op ==x (left right)
-  `((,*fn* ,@left) =x= ,@right))
+  `((,@*fn* ,@left) =x= ,@right))
 
 (define-op =x= (left right)
   (unless (= (length left) 1)
@@ -61,10 +61,10 @@
 (define-op ==>> (left right)
   `(let (({out} (make-in-memory-output-stream
                  :element-type ,(output-type (car right)))))
-     (handler-case (,*fn* ,@left)
+     (handler-case (,@*fn* ,@left)
        (error (e) (fail (format nil "Encountered error ~s
 ~4twhile evaluating ~a."
-                                e '(,*fn* ,@left)))))
+                                e '(,@*fn* ,@left)))))
      (if (equal (get-output-stream-sequence {out})
                 ,(car right))
          (pass)

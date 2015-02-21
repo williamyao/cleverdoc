@@ -4,7 +4,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *fn* nil)
-  (defparameter *tests* (make-hash-table)))
+  (defparameter *tests* (make-hash-table :test 'equal)))
 
 (defparameter *passes* nil)
 (defparameter *failures* nil)
@@ -16,19 +16,20 @@
   (setf (gethash name *tests*) clo)
   name)
 
-(defun in-test-level (sym level)
+(defun in-test-level (test level)
   (cond ((eql level :package)
          (string= (package-name *package*)
-                  (package-name (symbol-package sym))))
+                  (package-name (symbol-package (car test)))))
         ((eql level :full)
          t)
-        (t (eql sym level))))
+        (t (or (eql (car test) level)
+               (equal test level)))))
 
 (defun test (&key (level :package))
   (let (*passes* *failures*)
-    (loop for sym being the hash-keys of *tests*
-       when (in-test-level sym level)
-       do (funcall (gethash sym *tests*)))
+    (loop for test being the hash-keys of *tests*
+       when (in-test-level test level)
+       do (funcall (gethash test *tests*)))
     (display-results)))
 
 (defun display-results ()
@@ -61,7 +62,8 @@
     (format t "~&~4t~a" msg)))
 
 (defun result-base ()
-  `(,(package-name (symbol-package *fn*)) ,(symbol-name *fn*)))
+  `(,(package-name (symbol-package (car *fn*)))
+     ,(symbol-name (car *fn*))))
 
 (defun append1 (l obj)
   (append l (list obj)))
@@ -74,14 +76,14 @@
                  (append1 (result-base) msg))))
 
 (defmacro document (fn &body body)
-  (let ((*fn* fn))
+  (let ((*fn* (mklist fn)))
     `(progn
        ,(when (stringp (car body))
-         (aprog1 `(setf (documentation ',fn 'function) ,(car body))
-           (setf body (cdr body))))
-       (register-test ',fn
+              (aprog1 `(setf (documentation ',(car *fn*) 'function)
+                             ,(car body))
+                (setf body (cdr body))))
+       (register-test ',*fn*
                       (lambda ()
-                        (let ((*fn* ',fn))
                           ,@(mapcar (lambda (form)
                                       (expand-ops form))
-                                    body)))))))
+                                    body))))))
