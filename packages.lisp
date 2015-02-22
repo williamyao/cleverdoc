@@ -4,6 +4,7 @@
         #:cl-util
         #:flexi-streams)
   (:export #:document #:test
+           #:list-tests
            
            #:==> #:==/
            #:==x

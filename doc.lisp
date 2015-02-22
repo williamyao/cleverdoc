@@ -32,6 +32,18 @@
        do (funcall (gethash test *tests*)))
     (display-results)))
 
+(defun list-tests (&key (level :package))
+  (loop for test being the hash-keys of *tests*
+     when (in-test-level test level)
+     do (let ((sym (car test))
+              (simple? (single? test)))
+          (format t "~:[(~;~]~a::~a~{ ~a~}~:[)~;~]~%"
+                  simple?
+                  (package-name (symbol-package sym))
+                  (symbol-name sym)
+                  (cdr test)
+                  simple?))))
+
 (defun display-results ()
   (cond
     ((or *passes* *failures*)
