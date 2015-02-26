@@ -129,8 +129,8 @@ The backbone of CLeverdoc. All of these operators automatically expand into call
     (#\€ {out} ==>> #xe2 #x82 #xac)
     (#\¢ {out} ==>> #xc2 #xa2))
 
-  (document write-string
-    ("pizza" {out} ==>> #\p #\i #\z #\z #\a))
+  (document format
+    ({out} "~{~c~}" '(#\p #\i #\z #\z #\a) ==>> "pizza"))
   ```
 
 + **>>>**
