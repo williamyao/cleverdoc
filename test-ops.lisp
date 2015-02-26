@@ -3,6 +3,29 @@
 
 (in-package #:cleverdoc)
 
+(defparameter *float-tolerance* 0.01)
+
+(defmacro with-float-tolerance (tolerance &body body)
+  `(let ((*float-tolerance* ,tolerance))
+     ,@body))
+
+(defun compare-result (result expected)
+  (typecase expected
+    (float
+     (typecase result
+       (number (>= *float-tolerance*
+                   (abs (/ (- expected result)
+                           expected))))
+       (t (equal result expected))))
+    (number
+     (typecase result
+       (number (= result expected))
+       (t (equal result expected))))
+    (t (equal result expected))))
+
+(defun compare-results (mvlist1 mvlist2)
+  (every #'compare-result mvlist1 mvlist2))
+
 (define-op ==> (left right)
   `((,@*fn* ,@left) === ,@right))
 
@@ -13,9 +36,9 @@
   (unless (= (length left) 1)
     (error "Left-side argument to === should be a single form"))
   `(handler-case
-       (if (equal (subseq (multiple-value-list ,@left)
-                          0 ,(length right))
-                  (list ,@right))
+       (if (compare-results (subseq (multiple-value-list ,@left)
+                                    0 ,(length right))
+                            (list ,@right))
            (pass)
            (fail ,(format nil "~{ ~a~} =/=~{ ~a~}"
                           left right)))
@@ -27,9 +50,9 @@
   (unless (= (length left) 1)
     (error "Left-side argument to =/= should be a single form"))
   `(handler-case
-       (if (not (equal (subseq (multiple-value-list ,@left)
-                               0 ,(length right))
-                       (list ,@right)))
+       (if (not (compare-results (subseq (multiple-value-list ,@left)
+                                         0 ,(length right))
+                                 (list ,@right)))
            (pass)
            (fail ,(format nil "~{ ~a~} ===~{ ~a~}"
                           left right)))

@@ -13,6 +13,8 @@
            #:=x=
 
            #:==>>  #:>>>
-           #:{in}  #:{out}))
+           #:{in}  #:{out}
+
+           #:with-float-tolerance))
 (pushnew :cleverdoc *features*)
 
