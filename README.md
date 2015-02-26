@@ -79,21 +79,102 @@ Many of the CLeverdoc operators are aware of multiple return values.
 
 ###Operators
 
+####Function calling
+
+The backbone of CLeverdoc. All of these operators automatically expand into calls of the documented function, passing in the arguments to the left of the operator
+
++ **==>**
+
+  [*argument*]\* **==>** *value* [*multiple-value*]\*
+
+  Test that calling the documented function with the arguments specified results in the value(s) specified.
+
+  ```lisp
+  (document intern
+    ("tests" :keyword ==> :tests)
+    ("are" :keyword ==> :are)
+    ("fun!" :keyword ==> :fun!))
+  ```
+
++ **==/**
+
+  [*argument*]\* **==/** *value* [*multiple-value*]\*
+
+  Test that calling the documented function with the arguments specified does not result in exactly the value(s) specified. In the case of multiple return values, only one needs to differ for **==/** to pass.
+
+  ```lisp
+  (document +
+    (1 1 ==/ 3))
+  ```
+
++ **==x**
+
+  [*argument*]\* **==x** [*error*]\*
+
+  Test that calling the documented function with the arguments specified results in one of the errors specified.
+
+  ```lisp
+  (document aref
+    ('(not an array) 3 ==x type-error arithmetic-error))
+  ```
+
++ **==>>**
+
+  [*argument*]\* **==>>** [*output*]\*
+
+  Binds the variable **{OUT}** to an output stream with type inferred through the right-side arguments. Tests that calling the function with the arguments specified results in writing the right-side sequence to **{OUT}**. Useful for testing I/O functions.
+
+  ```lisp
+  (document write-utf8-char
+    (#\€ {out} ==>> #xe2 #x82 #xac)
+    (#\¢ {out} ==>> #xc2 #xa2))
+
+  (document write-string
+    ("pizza" {out} ==>> #\p #\i #\z #\z #\a))
+  ```
+
++ **>>>**
+
+  [*input*]\* **>>>** &body *body*
+
+  Binds the variable **{IN}** to an input stream within the scope of BODY, with type inferred from the left-side arguments. Reading the stream will return the left-side arguments. Not a test per-se, but useful for testing I/O functions.
+
+  ```lisp
+  (document read-utf8-char
+    (#xe2 #x82 #xac >>> {in} ==> #\€)
+    (#xc2 #xa2 >>> {in} ==> #\¢))
+
+  (document read-string
+    (#\p #\i #\z #\z #\a >>> {in} ==> "pizza"))
+  ```    
+
 ####Equality
 
 CLeverdoc supports basic equality operators. However, this should usually be eschewed in favor of using the operators with implied function calls. They may be useful in some situations, though.
 
-+ `===` tests equality, using `EQUAL`.
++ **===**
+
+  *form* **===** *value* [*multiple-value*]\*
+
+  Test that evaluating *form* results in the value(s) specified.
 
   ```lisp
   ((list) === nil)
   ```
-+ `=/=` tests inequality, using `EQUAL`.
++ **=/=**
+
+  *form* **=/=** *value* [*multiple-value*]\*
+
+  Test that evaluating *form* does not result in exactly the value(s) specified. In the case of multiple values, only one needs to differ for **===** to pass.
 
   ```lisp
   (2 =/= 3)
   ```
-+ `=x=` tests that evaluating the left-side form results in any of the errors specified on the right.
++ **=x=**
+
+  *form* **=x=** [*error*]\*
+
+  Test that evaluatiing *form* results in one of the errors specified.
 
   ```lisp
   ((+ 2 #\c) =x= simple-type-error end-of-file)
