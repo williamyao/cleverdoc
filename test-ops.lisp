@@ -55,6 +55,7 @@
 
 (defun output-type (sexp)
   (typecase sexp
+    (character 'character)
     (string 'character)
     (t 'octet)))
 
