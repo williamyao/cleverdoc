@@ -60,7 +60,7 @@
 				       (test nil)
 				       (test-not nil))
   "Return the index of the first value in VALUES that is found
-within sequence."
+within SEQUENCE."
   (dolist (value (mklist values))
     (let ((position (position value sequence
 			      :from-end from-end
