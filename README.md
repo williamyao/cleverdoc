@@ -33,14 +33,14 @@ Once this is defined, now we can run it using `TEST`.
 
 ==>
     
-Specification for COMMON-LISP::+ FAILED:
+Test case for COMMON-LISP::+ FAILED:
     (+ 1 1) =/= 3
 
 =============
    RESULTS
 =============
 
-Performed 3 checks.
+Tested 3 cases.
     FAIL: 1 (33%)
     Pass: 2 (67%)
 NIl

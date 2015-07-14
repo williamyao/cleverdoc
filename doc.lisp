@@ -103,7 +103,7 @@ Allowed values for LEVEL are:
 
 (defun display-failure (failure)
   (destructuring-bind (package function-name message) failure
-    (format t "~&Specification for ~a::~a FAILED:" package function-name)
+    (format t "~&Test case for ~a::~a FAILED:" package function-name)
     (format t "~&~4t~a" message)))
 
 (defun display-summary ()
@@ -111,7 +111,7 @@ Allowed values for LEVEL are:
          (numfail (length *failures*))
          (total (+ numpass numfail)))
     (format t "~&~%=============~%   RESULTS~%=============~%")
-    (format t "~%Performed ~d check~:p." total)
+    (format t "~%Tested ~d case~:p." total)
     (format t "~%~4tFAIL: ~d (~d%)" numfail (% numfail total))
     (format t "~%~4tPass: ~d (~d%)" numpass (% numpass total))))
 
