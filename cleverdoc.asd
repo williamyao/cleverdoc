@@ -14,5 +14,4 @@
   :serial t
   :components ((:file "packages")
                (:file "ops")
-               (:file "doc")
-               (:file "test-ops")))
+               (:file "doc")))
