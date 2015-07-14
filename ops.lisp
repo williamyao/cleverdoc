@@ -1,25 +1,19 @@
+#|
+ Macros and functions for defining and expanding operations
+ into test code.
+|#
+
 (in-package #:cleverdoc)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *ops* nil))
 
-(defun split (seps seq &key (test #'equal) (key #'identity))
-  (let ((pos (typecase seps
-               (sequence
-                (dotimes (i (length seq))
-                  (if (position (elt seq i) seps :test test :key key)
-                      (return i))))
-               (t (position seps seq)))))
-    (if pos
-        (values (subseq seq 0 pos)
-                (subseq seq (1+ pos)))
-        (values seq nil))))
-
 (defgeneric expand-op (op left right)
-  (:documentation "Return the expanded code to implement the OP, given the LEFT and RIGHT forms.")
+  (:documentation "Return the expanded code to implement the OP,
+ given the LEFT and RIGHT forms.")
   (:method (op left right)
     (error
-     "Op ~a is not implemented. You may have not used DEFINE-OP."
+     "Op ~a is not implemented. You may not have defined it with DEFINE-OP."
      op))
   (:method :around (op left right)
            (expand-ops (call-next-method))))
@@ -40,10 +34,40 @@
     (t nil)))
 
 (defun expand-ops (form)
+  "Recursively generate macroexpansions for all operations found in FORM."
   (let ((op (find-op form)))
     (cond
-      (op (multiple-value-bind (l r) (split op form)
-            (expand-op op l r)))
+      (op (destructuring-bind (left right) (split-on-op op form)
+            (expand-op op left right)))
       ((consp form)
        (loop for sexp in form collect (expand-ops sexp)))
       (t form))))
+
+(defun split-on-op (op form)
+  (let ((op-position (position op form)))
+    (list (subseq form 0 op-position)
+	  (when op-position
+	    (subseq form (+ op-position 1))))))
+
+;;; Not used.
+
+(defun mklist (value) (if (listp value) value (list value)))
+
+(defun position-any (values sequence &key (from-end nil)
+				       (start 0)
+				       (end nil)
+				       (key nil)
+				       (test nil)
+				       (test-not nil))
+  "Return the index of the first value in VALUES that is found
+within sequence."
+  (dolist (value (mklist values))
+    (let ((position (position value sequence
+			      :from-end from-end
+			      :start start
+			      :end end
+			      :key key
+			      :test test
+			      :test-not test-not)))
+      (when position
+	(return-from position-any position)))))

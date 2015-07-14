@@ -1,3 +1,7 @@
+#|
+ Implementation of testing framework.
+|#
+
 (in-package #:cleverdoc)
 
 (declaim (inline %))
@@ -6,17 +10,38 @@
   (defparameter *fn* nil)
   (defparameter *tests* (make-hash-table :test 'equal)))
 
-(defparameter *passes* nil)
-(defparameter *failures* nil)
+(defparameter *passes* nil "Per-execution list of test passes.")
+(defparameter *failures* nil "Per-execution list of test failures.")
 
 (defvar {in} nil "Input stream used in testing input functions.")
 (defvar {out} nil "Output stream used in testing output functions.")
 
-(defun register-test (test clo)
-  (setf (gethash test *tests*) clo)
-  (car test))
+(defmacro document (fn &body body)
+  "Document and create test cases for the function designated by the
+symbol FN.
 
-(defun in-test-level (test level)
+BODY can contain arbitrary Lisp forms, which will be evaluated as
+expected. Operations found within BODY will be run as tests.
+
+DOCUMENT can contain, as its first form, a documentation string for the 
+function."
+  (let ((*fn* (mklist fn)))
+    `(progn
+       ,(when (stringp (car body))
+              (aprog1 `(setf (documentation ',(car *fn*) 'function)
+                             ,(car body))
+                (setf body (cdr body))))
+       (register-test ',*fn*
+                      (lambda ()
+                          ,@(mapcar (lambda (form)
+                                      (expand-ops form))
+                                    body))))))
+
+(defun register-test (test test-closure)
+  (setf (gethash test *tests*) test-closure)
+  (first test)) ; the function symbol of the test
+
+(defun test-in-level-p (test level)
   (cond ((eql level :package)
          (string= (package-name *package*)
                   (package-name (symbol-package (car test)))))
@@ -25,18 +50,39 @@
         (t (or (eql (car test) level)
                (equal test level)))))
 
+;;; TODO 2015-07-14 -- make TEST return a boolean so it can be
+;;; run as a test-op from ASDF etc.
 (defun test (&key (level :package))
-  (let (*passes* *failures*)
+  "Run all tests defined at LEVEL and print the results.
+
+Allowed values for LEVEL are:
+* :PACKAGE -- all tests in the current package
+* :FULL    -- all tests
+* <symbol> -- all tests for the function designated by this symbol
+* (<symbol> <args>*) -- tests for this specific function and args"
+  (let ((*passes* '())
+	(*failures* '()))
     (loop for test being the hash-keys of *tests*
-       when (in-test-level test level)
+       when (test-in-level-p test level)
        do (funcall (gethash test *tests*)))
     (display-results)))
 
 (defun list-tests (&key (level :package))
+  "Print out a list of tests defined at this LEVEL to
+standard output.
+
+Allowed values for LEVEL are:
+* :PACKAGE -- all tests in the current package
+* :FULL    -- all tests
+* <symbol> -- all tests for the function designated by this symbol
+* (<symbol> <args>*) -- tests for this specific function and args"
   (loop for test being the hash-keys of *tests*
-     when (in-test-level test level)
-     do (let ((sym (car test))
-              (simple? (single? test)))
+     when (test-in-level-p test level)
+     do (let ((sym (first test))
+              (simple? (alexandria:sequence-of-length-p test 1)))
+	  ;; Prints a no-default-argument test as its package qualified
+	  ;; symbol, and tests with arguments as a list of the symbol
+	  ;; and arguments.
           (format t "~:[(~;~]~a::~a~{ ~a~}~:[)~;~]~%"
                   simple?
                   (package-name (symbol-package sym))
@@ -47,14 +93,18 @@
 (defun display-results ()
   (cond
     ((or *passes* *failures*)
-     (display-failures)
+     (display-failures) ; displaying successes seems pretty useless
      (display-summary))
-    (t
-     (format t "No matching tests found."))))
+    (t (format t "No matching tests found."))))
 
 (defun display-failures ()
   (loop for failure in *failures*
      do (display-failure failure)))
+
+(defun display-failure (failure)
+  (destructuring-bind (package function-name message) failure
+    (format t "~&Specification for ~a::~a FAILED:" package function-name)
+    (format t "~&~4t~a" message)))
 
 (defun display-summary ()
   (let* ((numpass (length *passes*))
@@ -67,11 +117,6 @@
 
 (defun % (n1 n2)
   (round (* 100 (/ n1 n2 1.0))))
-
-(defun display-failure (fcase)
-  (destructuring-bind (pkg fn msg) fcase
-    (format t "~&Specification for ~a::~a FAILED:" pkg fn)
-    (format t "~&~4t~a" msg)))
 
 (defun result-base ()
   `(,(package-name (symbol-package (car *fn*)))
@@ -86,16 +131,3 @@
   (setf *failures*
         (append1 *failures*
                  (append1 (result-base) msg))))
-
-(defmacro document (fn &body body)
-  (let ((*fn* (mklist fn)))
-    `(progn
-       ,(when (stringp (car body))
-              (aprog1 `(setf (documentation ',(car *fn*) 'function)
-                             ,(car body))
-                (setf body (cdr body))))
-       (register-test ',*fn*
-                      (lambda ()
-                          ,@(mapcar (lambda (form)
-                                      (expand-ops form))
-                                    body))))))

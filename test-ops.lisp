@@ -1,5 +1,6 @@
-;---------------------------------------------------------------------
-;  TESTING OPERATIONS
+#|
+ Implementation of test operations.
+|#
 
 (in-package #:cleverdoc)
 
@@ -82,20 +83,20 @@
     (t 'octet)))
 
 (define-op ==>> (left right)
-  `(let (({out} (make-in-memory-output-stream
+  `(let (({out} (flexi-streams:make-in-memory-output-stream
                  :element-type ,(output-type (car right)))))
      (handler-case (,@*fn* ,@left)
        (error (e) (fail (format nil "Encountered error ~s
 ~4twhile evaluating ~a."
                                 e '(,@*fn* ,@left)))))
-     (if (equal (get-output-stream-sequence {out})
+     (if (equal (flexi-streams:get-output-stream-sequence {out})
                 ,(car right))
          (pass)
          (fail ,(format nil "(~a~{ ~a~}) did not write out ~s."
                         *fn* left (car right))))))
                         
 (define-op >>> (left right)
-  `(let (({in} (make-in-memory-input-stream
+  `(let (({in} (flexi-streams:make-in-memory-input-stream
                 ,(typecase (car left)
                            (vector (car left))
                            (t (coerce left 'vector))))))
