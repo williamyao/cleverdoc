@@ -93,7 +93,7 @@ Allowed values for LEVEL are:
 (defun display-results ()
   (cond
     ((or *passes* *failures*)
-     (display-failures) ; displaying successes seems pretty useless
+     (display-failures) ; Displaying successes seems pretty useless.
      (display-summary))
     (t (format t "No matching tests found."))))
 
