@@ -165,7 +165,7 @@ CLeverdoc supports basic equality operators. However, this should usually be esc
 
   *form* **=/=** *value* [*multiple-value*]\*
 
-  Test that evaluating *form* does not result in exactly the value(s) specified. In the case of multiple values, only one needs to differ for **===** to pass.
+  Test that evaluating *form* does not result in exactly the value(s) specified. In the case of multiple values, only one needs to differ for **=/=** to pass.
 
   ```lisp
   (2 =/= 3)
