@@ -12,7 +12,8 @@
   :description "A Common Lisp documentation and unit testing library"
   :author "William Yao <williamyaoh@gmail.com>"
   :depends-on (:alexandria
-               :flexi-streams)
+               :flexi-streams
+               :defrecord)
   :serial t
   :components ((:file "packages")
                (:file "ops")
