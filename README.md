@@ -1,7 +1,7 @@
-CLeverdoc
+Cleverdoc
 =========
 
-Your unit tests are your program specification, but enforceable. Why should a unit test take more time to write than a specification?
+What does a unit test consist of? The values to put in, and the expected return values. Cleverdoc makes it just that simple.
 
 Something of this sort is needlessly verbose:
 
