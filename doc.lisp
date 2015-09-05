@@ -1,5 +1,7 @@
 ;;;; Implementation of tests and running suites.
 
+(in-package :cleverdoc)
+
 (declaim (inline %))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)

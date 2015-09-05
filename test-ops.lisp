@@ -1,5 +1,7 @@
 ;;;; Implementation of the various test operations.
 
+(in-package #:cleverdoc)
+
 (defparameter *float-tolerance* 0.01)
 
 (defmacro with-float-tolerance (tolerance &body body)

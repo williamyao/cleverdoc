@@ -1,6 +1,6 @@
 ;;;; A smarter way to write documentation and unit tests.
 
-(in-package #:cl-user)
+(in-package #:common-lisp-user)
 (defpackage #:cleverdoc
   (:use #:cl)
   (:export #:document #:test

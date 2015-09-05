@@ -1,5 +1,6 @@
 ;;;; A smarter way to write documentation and unit tests.
 
+(in-package #:common-lisp-user)
 (defpackage #:cleverdoc/asdf
   (:use #:cl
         #:asdf))

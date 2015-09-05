@@ -1,6 +1,8 @@
 ;;;; Macros and functions for expanding test operations
 ;;;; into functional code.
 
+(in-package #:cleverdoc)
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *ops* nil))
 
@@ -50,20 +52,20 @@
 (defun mklist (value) (if (listp value) value (list value)))
 
 (defun position-any (values sequence &key (from-end nil)
-				       (start 0)
-				       (end nil)
-				       (key nil)
-				       (test nil)
-				       (test-not nil))
+                                       (start 0)
+                                       (end nil)
+                                       (key nil)
+                                       (test nil)
+                                       (test-not nil))
   "Return the index of the first value in VALUES that is found
 within SEQUENCE."
   (dolist (value (mklist values))
     (let ((position (position value sequence
-			      :from-end from-end
-			      :start start
-			      :end end
-			      :key key
-			      :test test
-			      :test-not test-not)))
+                              :from-end from-end
+                              :start start
+                              :end end
+                              :key key
+                              :test test
+                              :test-not test-not)))
       (when position
-	(return-from position-any position)))))
+        (return-from position-any position)))))
