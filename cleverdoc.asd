@@ -1,3 +1,5 @@
+;;;; A smarter way to write documentation and unit tests.
+
 (defpackage #:cleverdoc/asdf
   (:use #:cl
         #:asdf))

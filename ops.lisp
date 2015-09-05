@@ -1,9 +1,5 @@
-#|
- Macros and functions for defining and expanding operations
- into test code.
-|#
-
-(in-package #:cleverdoc)
+;;;; Macros and functions for expanding test operations
+;;;; into functional code.
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *ops* nil))

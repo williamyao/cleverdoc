@@ -1,8 +1,4 @@
-#|
- Implementation of testing framework.
-|#
-
-(in-package #:cleverdoc)
+;;;; Implementation of tests and running suites.
 
 (declaim (inline %))
 

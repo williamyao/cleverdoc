@@ -1,8 +1,4 @@
-#|
- Implementation of test operations.
-|#
-
-(in-package #:cleverdoc)
+;;;; Implementation of the various test operations.
 
 (defparameter *float-tolerance* 0.01)
 

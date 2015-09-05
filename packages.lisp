@@ -1,3 +1,5 @@
+;;;; A smarter way to write documentation and unit tests.
+
 (in-package #:cl-user)
 (defpackage #:cleverdoc
   (:use #:cl)
