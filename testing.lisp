@@ -9,7 +9,9 @@
 (in-package #:cleverdoc)
 
 (variable-specification *tests*
-  "Mapping of symbols onto corresponding test closures.")
+  "Mapping of symbols onto corresponding test closures.
+~
+   Global.")
 (defvar *tests* (make-hash-table :test 'eql))
 
 (defmacro variable-specification (variable-name &body specification)
@@ -60,7 +62,7 @@ LEVEL can be one of:
        (remove-if-not (%get-test-level-predicate test-level)
                       (alexandria:hash-table-keys *tests*))))
 
-(defun run-tests-get-results (test-level)
+(defun run-tests-get-runs (test-level)
   "Return a list containing all the resulting `test-runs'
 from running the tests defined at TEST-LEVEL.
 
@@ -77,6 +79,8 @@ LEVEL can be one of:
     (dolist (test (get-tests test-level))
       (funcall test))
     *test-runs*))
+
+
 
 (defmacro define-test (symbol &body test-body)
   `(%define-test ',symbol
@@ -96,17 +100,23 @@ LEVEL can be one of:
                            (milliseconds-current-time))))
 
 (variable-specification *test-runs*
-  "Set of `test-run' objects. ~
-   Thread-local.")
+  "Set of `test-run' objects.
+~
+   Local to each invocation of RUN-TESTS-GET-RUNS.")
 (defvar *test-runs*)
 
 (variable-specification *function*
   "Symbol of the function upon which a test is being defined, ~
-   or which is currently being tested.")
+   or which is currently being tested.
+~
+   Local to each test closure.")
 (defvar *function*)
 
 (variable-specification *milliseconds-run-start-time*
-  "When an individual `test-run' was started.")
+  "When an individual `test-run' was started.
+~
+   Local (or at least confined to) each invocation of ~
+   PASS/FAIL.")
 (defvar *milliseconds-run-start-time*)
 
 (defmacro with-run (&body body)
