@@ -80,8 +80,6 @@ LEVEL can be one of:
       (funcall test))
     *test-runs*))
 
-
-
 (defmacro define-test (symbol &body test-body)
   `(%define-test ',symbol
                  (lambda ()
