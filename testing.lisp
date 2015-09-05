@@ -22,6 +22,71 @@ Provided for parallelism with FUNCTION-SPECIFICATION."
            (format nil ,@specification))
      ',variable-name))
 
+(defun %get-package-level-predicate (test-level)
+  (lambda (symbol)
+    (eql (symbol-package symbol)
+         (cond
+           ((eql test-level :package) *package*)
+           (t test-level)))))
+
+(defun %get-symbol-level-predicate (test-level)
+  (lambda (symbol) (eql symbol test-level)))
+
+(defun %get-test-level-predicate (test-level)
+  (cond
+    ((eql test-level :all)
+     #'identity)
+    ((or (eql test-level :package)
+         (packagep test-level))
+     (%get-package-level-predicate test-level))
+    ((and (symbolp test-level)
+          (not (keywordp test-level)))
+     (%get-symbol-level-predicate test-level))))
+
+(defun get-tests (test-level)
+  "Return a list of all tests defined at LEVEL.
+
+LEVEL can be one of:
+
+* :ALL -- returns all tests in *TESTS*
+* :PACKAGE, or a package object
+       -- returns all tests defined on symbols from
+          the specified package, or the current one
+          when passing :PACKAGE
+* <a symbol>
+       -- returns all tests specified on the symbol"
+  (map 'list
+       (lambda (symbol) (gethash symbol *tests*))
+       (remove-if-not (%get-test-level-predicate test-level)
+                      (alexandria:hash-table-keys *tests*))))
+
+(defun run-tests-get-results (test-level)
+  "Return a list containing all the resulting `test-runs'
+from running the tests defined at TEST-LEVEL.
+
+LEVEL can be one of:
+
+* :ALL -- returns all tests in *TESTS*
+* :PACKAGE, or a package object
+       -- returns all tests defined on symbols from
+          the specified package, or the current one
+          when passing :PACKAGE
+* <a symbol>
+       -- returns all tests specified on the symbol"
+  (let ((*test-runs* '()))
+    (dolist (test (get-tests test-level))
+      (funcall test))
+    *test-runs*))
+
+(defmacro define-test (symbol &body test-body)
+  `(%define-test ',symbol
+                 (lambda ()
+                   ,@test-body)))
+
+(defun %define-test (symbol test-function)
+  (setf (gethash symbol *tests*)
+        test-function))
+
 
 (record:define test-run ()
   pass?
