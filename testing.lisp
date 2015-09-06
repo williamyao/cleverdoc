@@ -80,6 +80,19 @@ LEVEL can be one of:
       (funcall test))
     *test-runs*))
 
+(defun test-run-pretty-message (test-run)
+  (if (pass? test-run)
+      (pass-pretty-message test-run)
+      (fail-pretty-message test-run)))
+
+(defgeneric pass-pretty-message (test-run)
+  (:documentation "Message to be printed for a `test-run' that
+meets expectations."))
+
+(defgeneric fail-pretty-message (test-run)
+  (:documentation "Message to be printed for a `test-run' that
+does not meet expectations."))
+
 (defmacro define-test (symbol &body test-body)
   `(%define-test ',symbol
                  (lambda ()
@@ -93,7 +106,7 @@ LEVEL can be one of:
 (record:define test-run ()
   pass?
   (function-symbol *function*)
-  message
+  arguments
   (millisecond-duration (- *milliseconds-run-start-time*
                            (milliseconds-current-time))))
 
