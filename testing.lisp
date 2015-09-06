@@ -178,7 +178,7 @@ TEST-LEVEL can be one of:
 
 (record:define function-run (test-run)
   (arguments '())
-  (test-function *function*))
+  (test-function *test-function*))
 
 (variable-specification *test-runs*
   "Set of `test-run' objects.
@@ -186,12 +186,12 @@ TEST-LEVEL can be one of:
    Local to each invocation of RUN-TESTS-GET-RUNS.")
 (defvar *test-runs*)
 
-(variable-specification *function*
+(variable-specification *test-function*
   "Symbol of the function upon which a test is being defined, ~
    or which is currently being tested.
 ~
    Local to each test closure.")
-(defvar *function*)
+(defvar *test-function*)
 
 (variable-specification *milliseconds-run-start-time*
   "When an individual `test-run' was started.
