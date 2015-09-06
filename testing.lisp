@@ -182,7 +182,9 @@ and run the test body. Good for one `test-run' only."
 ;;;  - This may be responsible for including the header, which would make
 ;;;    sense.
 (defun test-run-pretty-message (test-run)
-  )
+  (if (pass? test-run)
+      (pass-header test-run)
+      (format nil "~A~&  ~A" (fail-header test-run) (fail-pretty-message test-run))))
 
 (defgeneric pass-header (test-run)
   (:documentation "Contextual header for a `test-run' that
