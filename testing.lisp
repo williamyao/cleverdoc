@@ -14,6 +14,10 @@
    Global.")
 (defvar *tests* (make-hash-table :test 'eql))
 
+(variable-specification *show-passing-tests*
+  "Whether to print out anything for passing tests or not.")
+(defvar *show-passing-tests* nil)
+
 (defmacro variable-specification (variable-name &body specification)
   "Set the documentation of the variable named by VARIABLE-NAME. For
 convenience, SPECIFICATION acts like an argument list to (FORMAT NIL ...)
@@ -184,13 +188,17 @@ and run the test body. Good for one `test-run' only."
 (defun test-run-pretty-message (test-run)
   (if (pass? test-run)
       (pass-header test-run)
-      (format nil "~A~&  ~A" (fail-header test-run) (fail-pretty-message test-run))))
+      (format nil "~A~&  ~A~%" (fail-header test-run) (fail-pretty-message test-run))))
 
 (defgeneric pass-header (test-run)
   (:documentation "Contextual header for a `test-run' that
 meets expectations. Since there's no point printing a detailed message
 for passes, this includes the test duration. These may also be
 disabled entirely by the test-running user.")
+  (:method :around ((test-run test-run))
+    (if *show-passing-tests*
+        (call-next-method)
+        ""))
   (:method ((test-run test-run))
     (format nil
             "Test met expectations. ~A"
