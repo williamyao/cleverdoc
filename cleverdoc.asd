@@ -14,4 +14,5 @@
   :maintainer "William Yao <williamyaoh@gmail.com>"
   :depends-on (:alexandria :flexi-streams :defrecord)
   :serial t
-  :components ((:file "packages")))
+  :components ((:file "packages")
+               (:file "testing")))
