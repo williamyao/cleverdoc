@@ -98,6 +98,49 @@ TEST-LEVEL can be one of:
       (funcall test))
     *test-runs*))
 
+(defun percent-string (dividend divisor)
+  "Return a two-character string of the percent, or ?? if the
+divisor is zero. Needed to handle this degenerate case."
+  (if (not (zerop divisor))
+      (format nil "~2,'0d" (percent-of dividend divisor))
+      "??"))
+
+(defun test (&optional (test-level :all))
+  "Run specified tests and print out human-readable results to
+standard output.
+
+TEST-LEVEL can be one of:
+
+* :ALL -- runs all tests in *TESTS*
+* :PACKAGE, or a package object
+       -- runs all tests defined on symbols from
+          the specified package, or the current one
+          when passing :PACKAGE
+* <a symbol>
+       -- runs all tests specified on the symbol"
+  (let ((runs (run-tests-get-runs test-level)))
+    (dolist (run runs)
+      (format *standard-output*
+              "~A~%"
+              (test-run-pretty-message run)))
+    (let ((length (length runs))
+          (passes (loop for run in runs if (pass? run) count run))
+          (failures (loop for run in runs if (not (pass? run)) count run)))
+      (format *standard-output*
+              "~%=======~@
+               RESULTS~@
+               =======~@
+                      ~@
+               Ran ~D test~:P.~@
+                      ~@
+               !!!FAIL!!!: ~D (~A%)
+   Pass   : ~D (~A%)"
+              length
+              failures
+              (percent-string failures length)
+              passes
+              (percent-string passes length)))))
+
 (defun clear-tests (test-level)
   "Remove tests from *TESTS*.
 
