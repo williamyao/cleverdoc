@@ -45,10 +45,25 @@ Provided for parallelism with FUNCTION-SPECIFICATION."
           (not (keywordp test-level)))
      (%get-symbol-level-predicate test-level))))
 
+(defun get-test-symbols (test-level)
+  "Return a list of all symbols that have tests defined at LEVEL.
+
+TEST-LEVEL can be one of:
+
+* :ALL -- returns all symbols with tests in *TESTS*
+* :PACKAGE, or a package object
+       -- from either the specified package, or the current
+          when passing :PACKAGE, return all symbols that
+          have tests defined on them.
+* <a symbol>
+       -- returns the symbol, if it has a test defined."
+  (remove-if-not (%get-test-level-predicate test-level)
+                 (alexandria:hash-table-keys *tests*)))
+
 (defun get-tests (test-level)
   "Return a list of all tests defined at LEVEL.
 
-LEVEL can be one of:
+TEST-LEVEL can be one of:
 
 * :ALL -- returns all tests in *TESTS*
 * :PACKAGE, or a package object
@@ -59,26 +74,40 @@ LEVEL can be one of:
        -- returns all tests specified on the symbol"
   (map 'list
        (lambda (symbol) (gethash symbol *tests*))
-       (remove-if-not (%get-test-level-predicate test-level)
-                      (alexandria:hash-table-keys *tests*))))
+       (get-test-symbols test-level)))
 
 (defun run-tests-get-runs (test-level)
   "Return a list containing all the resulting `test-runs'
 from running the tests defined at TEST-LEVEL.
 
-LEVEL can be one of:
+TEST-LEVEL can be one of:
 
-* :ALL -- returns all tests in *TESTS*
+* :ALL -- runs all tests in *TESTS*
 * :PACKAGE, or a package object
-       -- returns all tests defined on symbols from
+       -- runs all tests defined on symbols from
           the specified package, or the current one
           when passing :PACKAGE
 * <a symbol>
-       -- returns all tests specified on the symbol"
+       -- runs all tests specified on the symbol"
   (let ((*test-runs* '()))
     (dolist (test (get-tests test-level))
       (funcall test))
     *test-runs*))
+
+(defun clear-tests (test-level)
+  "Remove tests from *TESTS*.
+
+TEST-LEVEL can be one of:
+
+* :ALL -- clears all tests in *TESTS*
+* :PACKAGE, or a package object
+       -- from either the specified package, or the current
+          when passing :PACKAGE, clear all tests.
+* <a symbol>
+       -- clear the test on the symbol, if it has
+          one defined."
+  (dolist (symbol (get-test-symbols test-level))
+    (remhash symbol *tests*)))
 
 (defun test-run-pretty-message (test-run)
   (if (pass? test-run)
