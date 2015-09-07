@@ -15,7 +15,9 @@
 (defvar *tests* (make-hash-table :test 'eql))
 
 (variable-specification *show-passing-tests*
-  "Whether to print out anything for passing tests or not.")
+  "Whether to print out anything for passing tests or not.
+~
+   Global.")
 (defvar *show-passing-tests* nil)
 
 (defmacro variable-specification (variable-name &body specification)
@@ -127,14 +129,14 @@ TEST-LEVEL can be one of:
           (passes (loop for run in runs if (pass? run) count run))
           (failures (loop for run in runs if (not (pass? run)) count run)))
       (format *standard-output*
-              "~%=======~@
+              "=======~@
                RESULTS~@
                =======~@
                       ~@
                Ran ~D test~:P.~@
                       ~@
                !!!FAIL!!!: ~D (~A%)
-   Pass   : ~D (~A%)"
+   PASS   : ~D (~A%)"
               length
               failures
               (percent-string failures length)
@@ -169,15 +171,15 @@ TEST-LEVEL can be one of:
 ;; This is more general and is used for equality.
 (record:define test-run ()
   pass?
-  (millisecond-duration (- *milliseconds-run-start-time*
-                           (milliseconds-current-time))))
+  (millisecond-duration (- (milliseconds-current-time)
+                           *milliseconds-run-start-time*)))
 
 (defgeneric second-duration (test-run)
   (:method ((test-run test-run))
     (milliseconds->seconds (millisecond-duration test-run))))
 
 (record:define function-run (test-run)
-  (arguments '())
+  (arguments *arguments*)
   (test-function *test-function*))
 
 (variable-specification *test-runs*
@@ -200,6 +202,30 @@ TEST-LEVEL can be one of:
    PASS/FAIL.")
 (defvar *milliseconds-run-start-time*)
 
+(variable-specification *arguments*
+  "The arguments being passed to the function ~
+   currently under test.
+~
+   Local (or at least confined to) each invocation of ~
+   PASS/FAIL.")
+(defvar *arguments*)
+
+(variable-specification *resultant-values*
+  "The list of multiple values returned from evaluating the ~
+   form currently under test.
+~
+   Local (or at least confined to) each invocation of ~
+   PASS/FAIL.")
+(defvar *resultant-values*)
+
+(variable-specification *expectant-values*
+  "The list of multiple values that are expected to be ~
+   returned from the form currently under test.
+~
+   Local (or at least confined to) each invocation of ~
+   PASS/FAIL.")
+(defvar *expectant-values*)
+
 (defmacro with-run (&body body)
   "Bind *MILLISECONDS-RUN-START-TIME* to the current time
 and run the test body. Good for one `test-run' only."
@@ -213,8 +239,21 @@ and run the test body. Good for one `test-run' only."
 ;;; TODO 2015-09-06 williamyaoh@gmail.com
 ;;;  - These will have to be general to fit all
 ;;;    expectations. Will have to revisit these.
-(defun pass ())
-(defun fail ())
+(defun pass ()
+  (push (make-instance 'expect-true-function-run
+                       :pass? t
+                       :arguments *arguments*
+                       :resultant-values *resultant-values*
+                       :expectant-values *expectant-values*)
+        *test-runs*))
+
+(defun fail ()
+  (push (make-instance 'expect-true-function-run
+                       :pass? nil
+                       :arguments *arguments*
+                       :resultant-values *resultant-values*
+                       :expectant-values *expectant-values*)
+        *test-runs*))
 
 
 ;;; Quick note. When testing against multiple value return,
@@ -230,7 +269,7 @@ and run the test body. Good for one `test-run' only."
 ;;;    sense.
 (defun test-run-pretty-message (test-run)
   (if (pass? test-run)
-      (pass-header test-run)
+      (format nil "~A~%" (pass-header test-run))
       (format nil "~A~&  ~A~%" (fail-header test-run) (fail-pretty-message test-run))))
 
 (defgeneric pass-header (test-run)
@@ -262,8 +301,8 @@ the actual failure message.")
   (:method ((test-run test-run)) "!!!TEST FAILURE!!!"))
 
 (record:define equality-run ()
-  (resultant-values '())
-  (expectant-values '()))
+  (resultant-values *resultant-values*)
+  (expectant-values *expectant-values*))
 
 (record:define expect-true-run (test-run equality-run))
 (record:define expect-false-run (test-run equality-run))
