@@ -463,6 +463,7 @@ registered."
             (inline-macroexpand-1 (funcall (gethash element *inline-macros*)
                                            (subseq form 0 position)
                                            (subseq form (+ position 1))))))))
+
 #-(and)
 (function-specification inline-macroexpand
   "Recursively expand all inline macros in the form.")
