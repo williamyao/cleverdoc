@@ -8,6 +8,11 @@
 
 (in-package #:cleverdoc)
 
+;;; TODO 2015-09-07 williamyaoh@gmail.com
+;;;  - A lot of code is using GET-LEVEL-PREDICATE to do
+;;;    level-specific behaviour. Have them all point to
+;;;    GET-PREDICATE-LEVEL's documentation to reduce clutter.
+
 (defmacro variable-specification (variable-name &body specification)
   "Set the documentation of the variable named by VARIABLE-NAME. For
 convenience, SPECIFICATION acts like an argument list to (FORMAT NIL ...)
@@ -40,16 +45,27 @@ Provided for parallelism with FUNCTION-SPECIFICATION."
 (defun %get-symbol-level-predicate (test-level)
   (lambda (symbol) (eql symbol test-level)))
 
-(defun %get-test-level-predicate (test-level)
+(defun get-level-predicate (level)
   (cond
-    ((eql test-level :all)
-     #'identity)
-    ((or (eql test-level :package)
-         (packagep test-level))
-     (%get-package-level-predicate test-level))
-    ((and (symbolp test-level)
-          (not (keywordp test-level)))
-     (%get-symbol-level-predicate test-level))))
+    ((eql level :all)
+     (constantly t))
+    ((or (eql level :package)
+         (packagep level))
+     (%get-package-level-predicate level))
+    ((and (symbolp level)
+          (not (keywordp level)))
+     (%get-symbol-level-predicate level))))
+(function-specification get-level-predicate
+  "Return a predicate that matches certain symbols, based on ~
+   LEVEL.
+~@
+   LEVEL can be one of: ~@
+~@
+   * :ALL -- matches all symbols ~@
+   * :PACKAGE, or a package object -- ~
+       match all symbols from the specified package, ~
+       or from the current package, when passing :PACKAGE ~@
+   * <a symbol> -- matches the symbol")
 
 (defun get-test-symbols (test-level)
   "Return a list of all symbols that have tests defined at LEVEL.
@@ -63,7 +79,7 @@ TEST-LEVEL can be one of:
           have tests defined on them.
 * <a symbol>
        -- returns the symbol, if it has a test defined."
-  (remove-if-not (%get-test-level-predicate test-level)
+  (remove-if-not (get-level-predicate test-level)
                  (alexandria:hash-table-keys *tests*)))
 
 (defun get-tests (test-level)
