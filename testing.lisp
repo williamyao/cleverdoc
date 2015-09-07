@@ -532,6 +532,24 @@ registered."
 ~@
    As a secondary value, return the element found.")
 
+(defun %shorter (list1 list2)
+  (cond
+    ;; LISTP to avoid things like (%SHORTER NIL 2) ==> T
+    ((and (listp list1) (null list2)) nil)
+    ((and (listp list2) (null list1) t))
+    (t (%shorter (rest list1) (rest list2)))))
+
+(defun shorter (list1 &rest more-lists)
+  (loop for shortest = list1 then (first rest)
+        for rest = more-lists then (rest rest)
+        while rest
+        always (%shorter shortest (first rest))))
+(function-specification shorter
+  "Return T if every list passed in is shorter than ~
+   all subsequent lists. In other words, return the same ~
+   thing as (< (MAP 'LIST #'LENGTH LISTS)), but without ~
+   iterating through the entirety of every list.")
+
 (defun milliseconds->seconds (milliseconds)
   (/ milliseconds 1000))
 
