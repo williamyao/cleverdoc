@@ -488,6 +488,40 @@ registered."
 (function-specification inline-macroexpand
   "Recursively expand all inline macros in the form.")
 
+(defun get-inline-macros (level)
+  (remove-if-not (get-level-predicate level)
+                 (alexandria:hash-table-keys *inline-macros*)))
+(function-specification get-inline-macros
+  "Return a list containing the symbols of all the inline macros ~
+   defined at LEVEL. ~@
+~@
+   LEVEL can be one of: ~@
+~@
+   * :ALL -- returns all inline macros ~@
+   * :PACKAGE, or a package object -- ~
+       return all inline macros defined in the specified package, ~
+       or in the current package, when passing :PACKAGE ~@
+   * <a symbol> -- returns a list containing the symbol, ~
+       if there is an inline macro defined on it")
+
+(defun clear-inline-macros (level)
+  (dolist (inline-macro-symbol (get-inline-macros level))
+    (remhash inline-macro-symbol *inline-macros*)))
+(function-specification clear-inline-macros
+  "Remove all inline macros defined at LEVEL. ~@
+~@
+   LEVEL can be one of: ~@
+~@
+   * :ALL -- removes all inline macros ~@
+   * :PACKAGE, or a package object -- ~
+       removes all inline macros defined in the specified package, ~
+       or in the current package, when passing :PACKAGE ~@
+   * <a symbol> -- removes the inline macro defined on the ~
+       symbol, if there is one")
+
+
+
+
 
 ;;; TODO 2015-09-07 williamyaoh@gmail.com
 ;;;  - add the key parameters that POSITION has
