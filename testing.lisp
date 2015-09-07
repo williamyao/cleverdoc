@@ -8,18 +8,6 @@
 
 (in-package #:cleverdoc)
 
-(variable-specification *tests*
-  "Mapping of symbols onto corresponding test closures.
-~
-   Global.")
-(defvar *tests* (make-hash-table :test 'eql))
-
-(variable-specification *show-passing-tests*
-  "Whether to print out anything for passing tests or not.
-~
-   Global.")
-(defvar *show-passing-tests* nil)
-
 (defmacro variable-specification (variable-name &body specification)
   "Set the documentation of the variable named by VARIABLE-NAME. For
 convenience, SPECIFICATION acts like an argument list to (FORMAT NIL ...)
@@ -29,6 +17,18 @@ Provided for parallelism with FUNCTION-SPECIFICATION."
      (setf (documentation ',variable-name 'variable)
            (format nil ,@specification))
      ',variable-name))
+
+(defvar *tests* (make-hash-table :test 'eql))
+(variable-specification *tests*
+  "Mapping of symbols onto corresponding test closures.
+~
+   Global.")
+
+(defvar *show-passing-tests* nil)
+(variable-specification *show-passing-tests*
+  "Whether to print out anything for passing tests or not.
+~
+   Global.")
 
 (defun %get-package-level-predicate (test-level)
   (lambda (symbol)
@@ -168,6 +168,50 @@ TEST-LEVEL can be one of:
         test-function))
 
 
+(defvar *test-runs*)
+(variable-specification *test-runs*
+  "Set of `test-run' objects.
+~
+   Local to each invocation of RUN-TESTS-GET-RUNS.")
+
+(defvar *test-function*)
+(variable-specification *test-function*
+  "Symbol of the function upon which a test is being defined, ~
+   or which is currently being tested.
+~
+   Local to each test closure.")
+
+(defvar *milliseconds-run-start-time*)
+(variable-specification *milliseconds-run-start-time*
+  "When an individual `test-run' was started.
+~
+   Local (or at least confined to) each invocation of ~
+   PASS/FAIL.")
+
+(defvar *arguments*)
+(variable-specification *arguments*
+  "The arguments being passed to the function ~
+   currently under test.
+~
+   Local (or at least confined to) each invocation of ~
+   PASS/FAIL.")
+
+(defvar *resultant-values*)
+(variable-specification *resultant-values*
+  "The list of multiple values returned from evaluating the ~
+   form currently under test.
+~
+   Local (or at least confined to) each invocation of ~
+   PASS/FAIL.")
+
+(defvar *expectant-values*)
+(variable-specification *expectant-values*
+  "The list of multiple values that are expected to be ~
+   returned from the form currently under test.
+~
+   Local (or at least confined to) each invocation of ~
+   PASS/FAIL.")
+
 ;; This is more general and is used for equality.
 (record:define test-run ()
   pass?
@@ -181,50 +225,6 @@ TEST-LEVEL can be one of:
 (record:define function-run (test-run)
   (arguments *arguments*)
   (test-function *test-function*))
-
-(variable-specification *test-runs*
-  "Set of `test-run' objects.
-~
-   Local to each invocation of RUN-TESTS-GET-RUNS.")
-(defvar *test-runs*)
-
-(variable-specification *test-function*
-  "Symbol of the function upon which a test is being defined, ~
-   or which is currently being tested.
-~
-   Local to each test closure.")
-(defvar *test-function*)
-
-(variable-specification *milliseconds-run-start-time*
-  "When an individual `test-run' was started.
-~
-   Local (or at least confined to) each invocation of ~
-   PASS/FAIL.")
-(defvar *milliseconds-run-start-time*)
-
-(variable-specification *arguments*
-  "The arguments being passed to the function ~
-   currently under test.
-~
-   Local (or at least confined to) each invocation of ~
-   PASS/FAIL.")
-(defvar *arguments*)
-
-(variable-specification *resultant-values*
-  "The list of multiple values returned from evaluating the ~
-   form currently under test.
-~
-   Local (or at least confined to) each invocation of ~
-   PASS/FAIL.")
-(defvar *resultant-values*)
-
-(variable-specification *expectant-values*
-  "The list of multiple values that are expected to be ~
-   returned from the form currently under test.
-~
-   Local (or at least confined to) each invocation of ~
-   PASS/FAIL.")
-(defvar *expectant-values*)
 
 (defmacro with-run (&body body)
   "Bind *MILLISECONDS-RUN-START-TIME* to the current time
@@ -419,11 +419,11 @@ registered."
       (and (consp form) (stringp (first form)))))
 
 
+(defvar *inline-macros* (make-hash-table :test 'eql))
 (variable-specification *inline-macros*
   "Hash table of symbols to expander functions. ~@
    Each expander function should have an arity of 2; left ~@
    and right lists of parameters.")
-(defvar *inline-macros* (make-hash-table :test 'eql))
 
 ;;; TODO 2015-09-06 williamyaoh@gmail.com
 ;;;  - This is a little too complicated, even though
