@@ -387,6 +387,35 @@ accurate but complicated one for multiple values."
             (test-run-duration-message test-run))))
 
 
+;;; TODO 2015-09-06 williamyaoh@gmail.com
+;;;  - Right now the documentation part works for macros,
+;;;    but for obvious reasons the testing part is a little
+;;;    wonky. There may be a way to see macro recompiles, but
+;;;    for now I don't have one. Maybe in the future, revisit
+;;;    this?
+(defmacro function-specification (function-name &body body)
+  "Set the function documentation of the specified function
+and define some tests on it.
+
+The first line of BODY may be a format string, or an s-expression
+with a format string as the first element. In the latter case, the
+rest of the s-expression is used as arguments to FORMAT. This format
+specifier is used to create the function documentation.
+
+If a format specifier is the only form in BODY, a test is not
+registered."
+  `(progn
+     ,(when (format-specifier-p (first body))
+        (prog1 `(setf (documentation ',function-name 'function)
+                      (format nil ,@(mklist (first body))))
+          (setf body (rest body))))
+     ',function-name))
+
+(defun format-specifier-p (form)
+  (or (stringp form)
+      (and (consp form) (stringp (first form)))))
+
+
 (defun milliseconds->seconds (milliseconds)
   (/ milliseconds 1000))
 
@@ -403,3 +432,5 @@ Return N, as an integer."
 (defun single-p (list)
   "Check if LIST is a list with only one element."
   (null (rest list)))
+
+(defun mklist (object) (if (listp object) object (list object)))
