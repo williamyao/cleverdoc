@@ -190,7 +190,8 @@ TEST-LEVEL can be one of:
 ~
    Local to each invocation of RUN-TESTS-GET-RUNS.")
 
-(defvar *test-function*)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *test-function*))
 (variable-specification *test-function*
   "Symbol of the function upon which a test is being defined, ~
    or which is currently being tested.
@@ -335,13 +336,14 @@ the actual failure message.")
           (symbol-name (test-function test-run))))
 
 (defun agree-length (resultant-values expected-values)
-  "Make RESULTANT 'agree' with EXPECTED in length.
-Returns a copy of RESULTANT, but the same length as EXPECTED or
-shorter."
   (map 'list
        (lambda (r e) (declare (ignore e)) r)
        resultant-values
        expected-values))
+(function-specification agree-length
+  "Make RESULTANT 'agree' with EXPECTED in length. ~@
+   Returns a copy of RESULTANT, but the same length as EXPECTED or ~
+   shorter.")
 
 (defun maybe-multiple-value-message (list-of-values)
   "Return a simpler message for single values, and a more
@@ -397,6 +399,94 @@ accurate but complicated one for multiple values."
             (test-run-duration-message test-run))))
 
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *inline-macros* (make-hash-table :test 'eql))
+  (variable-specification *inline-macros*
+    "Hash table of symbols to expander functions. ~@
+   Each expander function should have an arity of 2; left ~@
+   and right lists of parameters.")
+
+;;; TODO 2015-09-06 williamyaoh@gmail.com
+;;;  - This is a little too complicated, even though
+;;;    it looks short. Split it into some other
+;;;    functions, and make the destructuring use
+;;;    a more specialized error message on failed
+;;;    destructuring.
+  (defmacro define-inline-macro (name
+                                 (&rest left-args)
+                                 (&rest right-args)
+                                 &body body)
+    `(progn
+       ,(alexandria:with-gensyms (left right)
+          `(setf (gethash ',name *inline-macros*)
+                 (lambda (,left ,right)
+                   (destructuring-bind (,@left-args) ,left
+                     (destructuring-bind (,@right-args) ,right
+                       ,@body)))))
+       ',name))
+  (function-specification define-inline-macro
+    "Almost exactly the same as DEFMACRO, but for operators ~
+   that appear in the middle of an s-expression, not at ~
+   the beginning.")
+
+  (defun inline-macroexpand-1 (form)
+    (if (not (listp form))
+        form
+        (multiple-value-bind (position element)
+            (position-any (alexandria:hash-table-keys *inline-macros*) form)
+          (if (null position)
+              form
+              (inline-macroexpand-1 (funcall (gethash element *inline-macros*)
+                                             (subseq form 0 position)
+                                             (subseq form (+ position 1))))))))
+  (function-specification inline-macroexpand-1
+    "Expand all inline macros at depth 1 in the form, ~
+   from left to right.")
+
+  (defun inline-macroexpand (form)
+    (if (not (listp form))
+        form
+        (map 'list
+             #'inline-macroexpand
+             (inline-macroexpand-1 form))))
+  (function-specification inline-macroexpand
+    "Recursively expand all inline macros in the form.")
+
+  (defun get-inline-macros (level)
+    (remove-if-not (get-level-predicate level)
+                   (alexandria:hash-table-keys *inline-macros*)))
+  (function-specification get-inline-macros
+    "Return a list containing the symbols of all the inline macros ~
+   defined at LEVEL. ~@
+~@
+   LEVEL can be one of: ~@
+~@
+   * :ALL -- returns all inline macros ~@
+   * :PACKAGE, or a package object -- ~
+       return all inline macros defined in the specified package, ~
+       or in the current package, when passing :PACKAGE ~@
+   * <a symbol> -- returns a list containing the symbol, ~
+       if there is an inline macro defined on it")
+
+  (defun clear-inline-macros (level)
+    (dolist (inline-macro-symbol (get-inline-macros level))
+      (remhash inline-macro-symbol *inline-macros*)))
+  (function-specification clear-inline-macros
+    "Remove all inline macros defined at LEVEL. ~@
+~@
+   LEVEL can be one of: ~@
+~@
+   * :ALL -- removes all inline macros ~@
+   * :PACKAGE, or a package object -- ~
+       removes all inline macros defined in the specified package, ~
+       or in the current package, when passing :PACKAGE ~@
+   * <a symbol> -- removes the inline macro defined on the ~
+       symbol, if there is one"))
+
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun mklist (object) (if (listp object) object (list object))))
+
 ;;; TODO 2015-09-06 williamyaoh@gmail.com
 ;;;  - Right now the documentation part works for macros,
 ;;;    but for obvious reasons the testing part is a little
@@ -416,8 +506,11 @@ If a format specifier is the only form in BODY, a test is not
 registered."
   `(progn
      ,(when (format-specifier-p (first body))
-        (prog1 `(setf (documentation ',function-name 'function)
-                      (format nil ,@(mklist (first body))))
+        (prog1
+            #-(and)
+            `(setf (documentation ',function-name 'function)
+                   (format nil ,@(mklist (first body))))
+            nil
           (setf body (rest body))))
      ,(when (not (null body))
         `(define-test ,function-name
@@ -425,96 +518,37 @@ registered."
                (map 'list #'inline-macroexpand body))))
      ',function-name))
 
-(defun format-specifier-p (form)
-  (or (stringp form)
-      (and (consp form) (stringp (first form)))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun format-specifier-p (form)
+    (or (stringp form)
+        (and (consp form) (stringp (first form))))))
 
 
-(defvar *inline-macros* (make-hash-table :test 'eql))
-(variable-specification *inline-macros*
-  "Hash table of symbols to expander functions. ~@
-   Each expander function should have an arity of 2; left ~@
-   and right lists of parameters.")
-
-;;; TODO 2015-09-06 williamyaoh@gmail.com
-;;;  - This is a little too complicated, even though
-;;;    it looks short. Split it into some other
-;;;    functions, and make the destructuring use
-;;;    a more specialized error message on failed
-;;;    destructuring.
-(defmacro define-inline-macro (name
-                               (&rest left-args)
-                               (&rest right-args)
-                               &body body)
-  `(progn
-     ,(alexandria:with-gensyms (left right)
-        `(setf (gethash ',name *inline-macros*)
-               (lambda (,left ,right)
-                 (destructuring-bind (,@left-args) ,left
-                   (destructuring-bind (,@right-args) ,right
-                     ,@body)))))
-     ',name))
-(function-specification define-inline-macro
-  "Almost exactly the same as DEFMACRO, but for operators ~
-   that appear in the middle of an s-expression, not at ~
-   the beginning.")
-
-(defun inline-macroexpand-1 (form)
-  (if (not (listp form))
-      form
-      (multiple-value-bind (position element)
-          (position-any (alexandria:hash-table-keys *inline-macros*) form)
-        (if (null position)
-            form
-            (inline-macroexpand-1 (funcall (gethash element *inline-macros*)
-                                           (subseq form 0 position)
-                                           (subseq form (+ position 1))))))))
-(function-specification inline-macroexpand-1
-  "Expand all inline macros at depth 1 in the form, ~
-   from left to right.")
-
-(defun inline-macroexpand (form)
-  (if (not (listp form))
-      form
-      (map 'list
-           #'inline-macroexpand
-           (inline-macroexpand-1 form))))
-(function-specification inline-macroexpand
-  "Recursively expand all inline macros in the form.")
-
-(defun get-inline-macros (level)
-  (remove-if-not (get-level-predicate level)
-                 (alexandria:hash-table-keys *inline-macros*)))
-(function-specification get-inline-macros
-  "Return a list containing the symbols of all the inline macros ~
-   defined at LEVEL. ~@
+(defun compare-results (resultant-values expectant-values
+                        &key (equality #'equal))
+  (unless (shorter resultant-values expectant-values)
+    (every #'identity (map 'list
+                           equality
+                           (agree-length resultant-values expectant-values)
+                           expectant-values))))
+(function-specification compare-results
+  "Return T if RESULTANT-VALUES and EXPECTANT-VALUES are ~
+   equal under EQUALITY, and NIL otherwise. ~@
 ~@
-   LEVEL can be one of: ~@
-~@
-   * :ALL -- returns all inline macros ~@
-   * :PACKAGE, or a package object -- ~
-       return all inline macros defined in the specified package, ~
-       or in the current package, when passing :PACKAGE ~@
-   * <a symbol> -- returns a list containing the symbol, ~
-       if there is an inline macro defined on it")
+   RESULTANT-VALUES must be as long as or longer as ~
+   EXPECTANT-VALUES; otherwise, the expectation has ~
+   not been met.")
 
-(defun clear-inline-macros (level)
-  (dolist (inline-macro-symbol (get-inline-macros level))
-    (remhash inline-macro-symbol *inline-macros*)))
-(function-specification clear-inline-macros
-  "Remove all inline macros defined at LEVEL. ~@
-~@
-   LEVEL can be one of: ~@
-~@
-   * :ALL -- removes all inline macros ~@
-   * :PACKAGE, or a package object -- ~
-       removes all inline macros defined in the specified package, ~
-       or in the current package, when passing :PACKAGE ~@
-   * <a symbol> -- removes the inline macro defined on the ~
-       symbol, if there is one")
-
-
-
+(define-inline-macro ==> (&rest function-arguments) (&rest expectant-values)
+  `(with-run
+     (let ((*test-function* ',*test-function*)
+           (*arguments* ',function-arguments)
+           (*expectant-values* ',expectant-values)
+           (*resultant-values* (multiple-value-list
+                                (,*test-function* ,@function-arguments))))
+       (if (compare-results *resultant-values* *expectant-values*)
+           (pass)
+           (fail)))))
 
 
 ;;; TODO 2015-09-07 williamyaoh@gmail.com
@@ -567,5 +601,3 @@ registered."
 (defun single-p (list) (null (rest list)))
 (function-specification single-p
   "Check if LIST is a list of a single element.")
-
-(defun mklist (object) (if (listp object) object (list object)))
