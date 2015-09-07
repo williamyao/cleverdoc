@@ -256,19 +256,11 @@ and run the test body. Good for one `test-run' only."
 ;;;  - These will have to be general to fit all
 ;;;    expectations. Will have to revisit these.
 (defun pass ()
-  (push (make-instance 'expect-true-function-run
-                       :pass? t
-                       :arguments *arguments*
-                       :resultant-values *resultant-values*
-                       :expectant-values *expectant-values*)
+  (push (make-instance 'expect-true-function-run :pass? t)
         *test-runs*))
 
 (defun fail ()
-  (push (make-instance 'expect-true-function-run
-                       :pass? nil
-                       :arguments *arguments*
-                       :resultant-values *resultant-values*
-                       :expectant-values *expectant-values*)
+  (push (make-instance 'expect-true-function-run :pass? nil)
         *test-runs*))
 
 
