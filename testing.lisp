@@ -139,13 +139,13 @@ TEST-LEVEL can be one of:
   (let ((runs (run-tests-get-runs test-level)))
     (dolist (run runs)
       (format *standard-output*
-              "~A~%"
+              "~A"
               (test-run-pretty-message run)))
     (let ((length (length runs))
           (passes (loop for run in runs if (pass? run) count run))
           (failures (loop for run in runs if (not (pass? run)) count run)))
       (format *standard-output*
-              "=======~@
+              "~%=======~@
                RESULTS~@
                =======~@
                       ~@
@@ -285,8 +285,8 @@ and run the test body. Good for one `test-run' only."
 ;;;    sense.
 (defun test-run-pretty-message (test-run)
   (if (pass? test-run)
-      (format nil "~A~%" (pass-header test-run))
-      (format nil "~A~&  ~A~%" (fail-header test-run) (fail-pretty-message test-run))))
+      (format nil "~A" (pass-header test-run))
+      (format nil "~A~&  ~A" (fail-header test-run) (fail-pretty-message test-run))))
 
 (defgeneric pass-header (test-run)
   (:documentation "Contextual header for a `test-run' that
@@ -295,7 +295,7 @@ for passes, this includes the test duration. These may also be
 disabled entirely by the test-running user.")
   (:method :around ((test-run test-run))
     (if *show-passing-tests*
-        (call-next-method)
+        (format nil "~A~%" (call-next-method))
         ""))
   (:method ((test-run test-run))
     (format nil
@@ -305,6 +305,8 @@ disabled entirely by the test-running user.")
 (defgeneric fail-pretty-message (test-run)
   (:documentation "Message to be printed for a `test-run' that
 does not meet expectations.")
+  (:method :around ((test-run test-run))
+    (format nil "~A~2&" (call-next-method)))
   (:method ((test-run test-run))
     (format nil
             "Test did not meet expectations. ~A"
