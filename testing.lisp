@@ -409,9 +409,10 @@ registered."
         (prog1 `(setf (documentation ',function-name 'function)
                       (format nil ,@(mklist (first body))))
           (setf body (rest body))))
-     (define-test ,function-name
-       ,@(let ((*test-function* function-name))
-           (map 'list #'inline-macroexpand body)))
+     ,(when (not (null body))
+        `(define-test ,function-name
+           ,@(let ((*test-function* function-name))
+               (map 'list #'inline-macroexpand body))))
      ',function-name))
 
 (defun format-specifier-p (form)
@@ -431,11 +432,6 @@ registered."
 ;;;    functions, and make the destructuring use
 ;;;    a more specialized error message on failed
 ;;;    destructuring.
-#-(and)
-(function-specification define-inline-macro
-  "Almost exactly the same as DEFMACRO, but for operators ~
-   that appear in the middle of an s-expression, not at ~
-   the beginning.")
 (defmacro define-inline-macro (name
                                (&rest left-args)
                                (&rest right-args)
@@ -448,11 +444,11 @@ registered."
                    (destructuring-bind (,@right-args) ,right
                      ,@body)))))
      ',name))
+(function-specification define-inline-macro
+  "Almost exactly the same as DEFMACRO, but for operators ~
+   that appear in the middle of an s-expression, not at ~
+   the beginning.")
 
-#-(and)
-(function-specification inline-macroexpand-1
-  "Expand all inline macros at depth 1 in the form, ~
-   from left to right.")
 (defun inline-macroexpand-1 (form)
   (if (not (listp form))
       form
@@ -463,26 +459,22 @@ registered."
             (inline-macroexpand-1 (funcall (gethash element *inline-macros*)
                                            (subseq form 0 position)
                                            (subseq form (+ position 1))))))))
+(function-specification inline-macroexpand-1
+  "Expand all inline macros at depth 1 in the form, ~
+   from left to right.")
 
-#-(and)
-(function-specification inline-macroexpand
-  "Recursively expand all inline macros in the form.")
 (defun inline-macroexpand (form)
   (if (not (listp form))
       form
       (map 'list
            #'inline-macroexpand
            (inline-macroexpand-1 form))))
+(function-specification inline-macroexpand
+  "Recursively expand all inline macros in the form.")
 
 
 ;;; TODO 2015-09-07 williamyaoh@gmail.com
 ;;;  - add the key parameters that POSITION has
-#-(and)
-(function-specification position-any
-  "Return the position of the first element of SEQUENCE ~
-   that is a member of ELEMENTS.
-~@
-   As a secondary value, return the element found.")
 (defun position-any (elements sequence)
   (loop for position upfrom 0
         for element in sequence
@@ -490,6 +482,11 @@ registered."
           do (return-from position-any
                (values position element))
         finally (return (values nil nil))))
+(function-specification position-any
+  "Return the position of the first element of SEQUENCE ~
+   that is a member of ELEMENTS.
+~@
+   As a secondary value, return the element found.")
 
 (defun milliseconds->seconds (milliseconds)
   (/ milliseconds 1000))
@@ -500,12 +497,13 @@ registered."
         1000)))
 
 (defun percent-of (x y)
-  "X is N percent of Y.
-Return N, as an integer."
   (round (* 100 (/ x y))))
+(function-specification percent-of
+  "X is N percent of Y. ~@
+   Return N, as an integer.")
 
-(defun single-p (list)
-  "Check if LIST is a list with only one element."
-  (null (rest list)))
+(defun single-p (list) (null (rest list)))
+(function-specification single-p
+  "Check if LIST is a list of a single element.")
 
 (defun mklist (object) (if (listp object) object (list object)))
