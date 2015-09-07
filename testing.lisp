@@ -418,6 +418,7 @@ registered."
   (or (stringp form)
       (and (consp form) (stringp (first form)))))
 
+
 (variable-specification *inline-macros*
   "Hash table of symbols to expander functions. ~@
    Each expander function should have an arity of 2; left ~@
@@ -440,14 +441,6 @@ registered."
                                (&rest right-args)
                                &body body)
   `(progn
-     ,(when (format-specifier-p (first body))
-        (destructuring-bind (format-string &rest format-args) (mklist (first body))
-            (prog1 `(setf (documentation ',name 'function)
-                          (format nil
-                                  "Inline macro.~%~%~?"
-                                  ,format-string
-                                  ,format-args))
-              (setf body (rest body)))))
      ,(alexandria:with-gensyms (left right)
         `(setf (gethash ',name *inline-macros*)
                (lambda (,left ,right)
