@@ -409,13 +409,94 @@ registered."
         (prog1 `(setf (documentation ',function-name 'function)
                       (format nil ,@(mklist (first body))))
           (setf body (rest body))))
+     (define-test ,function-name
+       ,@(let ((*test-function* function-name))
+           (map 'list #'inline-macroexpand body)))
      ',function-name))
 
 (defun format-specifier-p (form)
   (or (stringp form)
       (and (consp form) (stringp (first form)))))
 
+(variable-specification *inline-macros*
+  "Hash table of symbols to expander functions. ~@
+   Each expander function should have an arity of 2; left ~@
+   and right lists of parameters.")
+(defvar *inline-macros* (make-hash-table :test 'eql))
+
+;;; TODO 2015-09-06 williamyaoh@gmail.com
+;;;  - This is a little too complicated, even though
+;;;    it looks short. Split it into some other
+;;;    functions, and make the destructuring use
+;;;    a more specialized error message on failed
+;;;    destructuring.
+#-(and)
+(function-specification define-inline-macro
+  "Almost exactly the same as DEFMACRO, but for operators ~
+   that appear in the middle of an s-expression, not at ~
+   the beginning.")
+(defmacro define-inline-macro (name
+                               (&rest left-args)
+                               (&rest right-args)
+                               &body body)
+  `(progn
+     ,(when (format-specifier-p (first body))
+        (destructuring-bind (format-string &rest format-args) (mklist (first body))
+            (prog1 `(setf (documentation ',name 'function)
+                          (format nil
+                                  "Inline macro.~%~%~?"
+                                  ,format-string
+                                  ,format-args))
+              (setf body (rest body)))))
+     ,(alexandria:with-gensyms (left right)
+        `(setf (gethash ',name *inline-macros*)
+               (lambda (,left ,right)
+                 (destructuring-bind (,@left-args) ,left
+                   (destructuring-bind (,@right-args) ,right
+                     ,@body)))))
+     ',name))
+
+#-(and)
+(function-specification inline-macroexpand-1
+  "Expand all inline macros at depth 1 in the form, ~
+   from left to right.")
+(defun inline-macroexpand-1 (form)
+  (if (not (listp form))
+      form
+      (multiple-value-bind (position element)
+          (position-any (alexandria:hash-table-keys *inline-macros*) form)
+        (if (null position)
+            form
+            (inline-macroexpand-1 (funcall (gethash element *inline-macros*)
+                                           (subseq form 0 position)
+                                           (subseq form (+ position 1))))))))
+#-(and)
+(function-specification inline-macroexpand
+  "Recursively expand all inline macros in the form.")
+(defun inline-macroexpand (form)
+  (if (not (listp form))
+      form
+      (map 'list
+           #'inline-macroexpand
+           (inline-macroexpand-1 form))))
+
 
+;;; TODO 2015-09-07 williamyaoh@gmail.com
+;;;  - add the key parameters that POSITION has
+#-(and)
+(function-specification position-any
+  "Return the position of the first element of SEQUENCE ~
+   that is a member of ELEMENTS.
+~@
+   As a secondary value, return the element found.")
+(defun position-any (elements sequence)
+  (loop for position upfrom 0
+        for element in sequence
+        if (member element elements)
+          do (return-from position-any
+               (values position element))
+        finally (return (values nil nil))))
+
 (defun milliseconds->seconds (milliseconds)
   (/ milliseconds 1000))
 
