@@ -111,10 +111,14 @@ TEST-LEVEL can be one of:
           when passing :PACKAGE
 * <a symbol>
        -- runs all tests specified on the symbol"
-  (let ((*test-runs* '()))
-    (dolist (test (get-tests test-level))
-      (funcall test))
-    *test-runs*))
+  (let ((*test-runs* '())
+        (tests (get-tests test-level)))
+    (if (null tests)
+        (values nil nil)
+        (progn
+          (dolist (test tests)
+            (funcall test))
+          (values *test-runs* t)))))
 
 (defun percent-string (dividend divisor)
   "Return a two-character string of the percent, or ?? if the
@@ -136,28 +140,33 @@ TEST-LEVEL can be one of:
           when passing :PACKAGE
 * <a symbol>
        -- runs all tests specified on the symbol"
-  (let ((runs (run-tests-get-runs test-level)))
-    (dolist (run runs)
-      (format *standard-output*
-              "~A"
-              (test-run-pretty-message run)))
-    (let ((length (length runs))
-          (passes (loop for run in runs if (pass? run) count run))
-          (failures (loop for run in runs if (not (pass? run)) count run)))
-      (format *standard-output*
-              "~%=======~@
-               RESULTS~@
-               =======~@
-                      ~@
-               Ran ~D test~:P.~@
-                      ~@
-               !!!FAIL!!!: ~D (~A%)
-   PASS   : ~D (~A%)"
-              length
-              failures
-              (percent-string failures length)
-              passes
-              (percent-string passes length)))))
+  (multiple-value-bind (runs found-tests?) (run-tests-get-runs test-level)
+    (if (not found-tests?)
+        (format *standard-output*
+                "No tests defined at this level. ~@
+                 Try using FUNCTION-SPECIFICATION.")
+        (progn
+          (dolist (run runs)
+            (format *standard-output*
+                    "~A"
+                    (test-run-pretty-message run)))
+          (let ((length (length runs))
+                (passes (loop for run in runs if (pass? run) count run))
+                (failures (loop for run in runs if (not (pass? run)) count run)))
+            (format *standard-output*
+                    "~%=======~@
+                     RESULTS~@
+                     =======~@
+~@
+                     Ran ~D test~:P.~@
+~@
+                     !!!FAIL!!!: ~4D (~A%)
+   PASS   : ~4D (~A%)"
+                    length
+                    failures
+                    (percent-string failures length)
+                    passes
+                    (percent-string passes length)))))))
 
 (defun clear-tests (test-level)
   "Remove tests from *TESTS*.
@@ -299,7 +308,7 @@ disabled entirely by the test-running user.")
   (:documentation "Message to be printed for a `test-run' that
 does not meet expectations.")
   (:method :around ((test-run test-run))
-    (format nil "~A~2&" (call-next-method)))
+    (format nil "~A~2& " (call-next-method)))
   (:method ((test-run test-run))
     (format nil
             "Test did not meet expectations. ~A"
