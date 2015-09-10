@@ -28,7 +28,7 @@
                    (destructuring-bind (,@right-args) ,right
                      ,@body)))))
      ',name))
-(function-specification define-inline-macro
+#-(and)(function-specification define-inline-macro
   "Almost exactly the same as DEFMACRO, but for operators ~
    that appear in the middle of an s-expression, not at ~
    the beginning.")
@@ -43,7 +43,7 @@
             (inline-macroexpand-1 (funcall (gethash element *inline-macros*)
                                            (subseq form 0 position)
                                            (subseq form (+ position 1))))))))
-(function-specification inline-macroexpand-1
+#-(and)(function-specification inline-macroexpand-1
   "Expand all inline macros at depth 1 in the form, ~
    from left to right.")
 
@@ -53,13 +53,13 @@
       (map 'list
            #'inline-macroexpand
            (inline-macroexpand-1 form))))
-(function-specification inline-macroexpand
+#-(and)(function-specification inline-macroexpand
   "Recursively expand all inline macros in the form.")
 
 (defun get-inline-macros (level)
   (remove-if-not (get-level-predicate level)
                  (alexandria:hash-table-keys *inline-macros*)))
-(function-specification get-inline-macros
+#-(and)(function-specification get-inline-macros
   "Return a list containing the symbols of all the inline macros ~
    defined at LEVEL. ~@
 ~@
@@ -75,7 +75,7 @@
 (defun clear-inline-macros (level)
   (dolist (inline-macro-symbol (get-inline-macros level))
     (remhash inline-macro-symbol *inline-macros*)))
-(function-specification clear-inline-macros
+#-(and)(function-specification clear-inline-macros
   "Remove all inline macros defined at LEVEL. ~@
 ~@
    LEVEL can be one of: ~@

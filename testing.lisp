@@ -55,7 +55,7 @@ Provided for parallelism with FUNCTION-SPECIFICATION."
     ((and (symbolp level)
           (not (keywordp level)))
      (%get-symbol-level-predicate level))))
-(function-specification get-level-predicate
+#-(and)(function-specification get-level-predicate
   "Return a predicate that matches certain symbols, based on ~
    LEVEL.
 ~@
@@ -342,7 +342,7 @@ the actual failure message.")
        (lambda (r e) (declare (ignore e)) r)
        resultant-values
        expected-values))
-(function-specification agree-length
+#-(and)(function-specification agree-length
   "Make RESULTANT 'agree' with EXPECTED in length. ~@
    Returns a copy of RESULTANT, but the same length as EXPECTED or ~
    shorter.")
@@ -445,7 +445,7 @@ registered."
                            equality
                            (agree-length resultant-values expectant-values)
                            expectant-values))))
-(function-specification compare-results
+#-(and)(function-specification compare-results
   "Return T if RESULTANT-VALUES and EXPECTANT-VALUES are ~
    equal under EQUALITY, and NIL otherwise. ~@
 ~@
