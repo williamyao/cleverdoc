@@ -15,4 +15,5 @@
   :depends-on (:alexandria :flexi-streams :defrecord)
   :serial t
   :components ((:file "packages")
+               (:file "inline-macros")
                (:file "testing")))
