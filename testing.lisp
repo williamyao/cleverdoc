@@ -24,13 +24,13 @@ Provided for parallelism with FUNCTION-SPECIFICATION."
      ',variable-name))
 
 (defvar *tests* (make-hash-table :test 'eql))
-(variable-specification *tests*
+#-(and)(variable-specification *tests*
   "Mapping of symbols onto corresponding test closures.
 ~
    Global.")
 
 (defvar *show-passing-tests* nil)
-(variable-specification *show-passing-tests*
+#-(and)(variable-specification *show-passing-tests*
   "Whether to print out anything for passing tests or not.
 ~
    Global.")
@@ -187,28 +187,28 @@ TEST-LEVEL can be one of:
 
 
 (defvar *test-runs*)
-(variable-specification *test-runs*
+#-(and)(variable-specification *test-runs*
   "Set of `test-run' objects.
 ~
    Local to each invocation of RUN-TESTS-GET-RUNS.")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *test-function*))
-(variable-specification *test-function*
+#-(and)(variable-specification *test-function*
   "Symbol of the function upon which a test is being defined, ~
    or which is currently being tested.
 ~
    Local to each test closure.")
 
 (defvar *milliseconds-run-start-time*)
-(variable-specification *milliseconds-run-start-time*
+#-(and)(variable-specification *milliseconds-run-start-time*
   "When an individual `test-run' was started.
 ~
    Local (or at least confined to) each invocation of ~
    PASS/FAIL.")
 
 (defvar *arguments*)
-(variable-specification *arguments*
+#-(and)(variable-specification *arguments*
   "The arguments being passed to the function ~
    currently under test.
 ~
@@ -216,7 +216,7 @@ TEST-LEVEL can be one of:
    PASS/FAIL.")
 
 (defvar *resultant-values*)
-(variable-specification *resultant-values*
+#-(and)(variable-specification *resultant-values*
   "The list of multiple values returned from evaluating the ~
    form currently under test.
 ~
@@ -224,7 +224,7 @@ TEST-LEVEL can be one of:
    PASS/FAIL.")
 
 (defvar *expectant-values*)
-(variable-specification *expectant-values*
+#-(and)(variable-specification *expectant-values*
   "The list of multiple values that are expected to be ~
    returned from the form currently under test.
 ~

@@ -4,7 +4,7 @@
 (in-package #:cleverdoc)
 
 (defvar *inline-macros* (make-hash-table :test 'eql))
-(variable-specification *inline-macros*
+#-(and)(variable-specification *inline-macros*
   "Hash table of symbols to expander functions. ~@
    Each expander function should have an arity of 2; left ~@
    and right lists of parameters.")
