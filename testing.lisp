@@ -1,4 +1,4 @@
-[;;;; Functionality for creating and running tests.
+;;;; Functionality for creating and running tests.
 
 ;;; TODO 2015-09-05 williamyaoh@gmail.com
 ;;;  - somewhere down the line, add the ability to
