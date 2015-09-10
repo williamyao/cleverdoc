@@ -136,8 +136,9 @@ TEST-LEVEL can be one of:
   (multiple-value-bind (runs found-tests?) (run-tests-get-runs test-level)
     (if (not found-tests?)
         (format *standard-output*
-                "No tests defined at this level. ~@
-                 Try using FUNCTION-SPECIFICATION.")
+                "No tests defined at level: ~S. ~@
+                 Try using FUNCTION-SPECIFICATION."
+                test-level)
         (progn
           (dolist (run runs)
             (format *standard-output*
