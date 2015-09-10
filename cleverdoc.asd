@@ -15,5 +15,6 @@
   :depends-on (:alexandria :flexi-streams :defrecord)
   :serial t
   :components ((:file "packages")
+               (:file "miscellaneous-utilities")
                (:file "inline-macros")
                (:file "testing")))
