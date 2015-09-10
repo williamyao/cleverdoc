@@ -120,7 +120,7 @@ TEST-LEVEL can be one of:
             (funcall test))
           (values *test-runs* t)))))
 
-(defun test (&optional (test-level :all))
+(defun test (&optional (test-level :package))
   "Run specified tests and print out human-readable results to
 standard output.
 
